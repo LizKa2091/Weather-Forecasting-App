@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather forecasting</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-wrapper">
+        <main>
+            <div class="main__inner-wrapper">
+                <section class="main__section-user">
+                    <h1>Weather forecasting</h1>
+                    <form action="" id="form">
+                        <fieldset>
+                            <label for="city">Please enter your city</label>
+                            <input type="text" id="city">
+                            <label>Please choose format</label>
+                            <div>
+                                <input type="radio" id="curr" name="range" value="curr" class="range">
+                                <label for="curr">Current weather</label>
+                                
+                                <input type="radio" id="5days" name="range" value="5days" class="range">
+                                <label for="5days">5 days forecast (by every 3 hours)</label>
+                            </div>
+                            <button type="submit" class="submit-button">Search</button>
+                        </fieldset>
+                    </form>
+                </section>
+            </div>
+            <section class="main__section-result"></section>
+            <aside></aside>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
