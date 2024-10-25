@@ -6,7 +6,7 @@ const aside = document.querySelector('aside');
 const mainInner = document.querySelector('.main__inner-wrapper');
 const resultSection = document.querySelector('.main__section-result');
 
-let limit = 5;
+let limit = 10;
 let clickedSearch = 0;
 const resultStates = [];
 
@@ -14,9 +14,19 @@ const apiKey = '630dfa7ca50c04e808eb17c37175e416';
 
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    resultSection.textContent = '';
     if (clickedSearch < 1) {
         const userInputCity = inputCity.value;
+        if (userInputCity === '') {
+            clickedSearch = 0;
+            return;
+        }
+        else if (!document.getElementById('5days').checked && !document.getElementById('curr').checked) {
+            clickedSearch = 0;
+            return;
+        }
         const getInfo = await getCityInfo(userInputCity);
+        resultSection.textContent = '';
         lat = getInfo[0];
         lon = getInfo[1];
         const checkedRanges = [...inputRange].map(range => range.checked ? range : '').filter(range => range.length !== 0);
@@ -27,9 +37,18 @@ form.addEventListener('submit', async (e) => {
 });
 
 const getCityInfo = async (city) => {
-    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+    resultSection.textContent = 'Loading...';
+    let response;
+    try {
+        response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+    }
+    catch(err) {
+        resultSection.textContent = 'Failed to fetch city data. Try again in a few minutes';
+        clickedSearch = 0;
+        throw new Error(`failed to fetch city data`);
+    }
     const data = await response.json();
-    return [data.coord.lon, data.coord.lat]
+    return [data.coord.lon, data.coord.lat];
 };
 
 const processFormat = async (range, city) => {
@@ -104,7 +123,7 @@ const showResults = async (range, city) => {
                 lat = newObj[`${chosenState}`]['lat'];
                 lon = newObj[`${chosenState}`]['lon'];
                 if (inputCity !== '' && document.getElementById('curr').checked) displayCurrWeather(lat, lon);
-                else if (inputCity !== '' && document.getElementById('5days').checked) display40DaysWeather(lat, lon);   
+                else if (inputCity !== '' && document.getElementById('5days').checked) display5DaysWeather(lat, lon);   
             });
         });
     }
@@ -123,36 +142,52 @@ const getDaysWeather = async (lat, lon) => {
     return outp;
 };
 
-const display40DaysWeather = async (let, lon) => {
+const display5DaysWeather = async (let, lon) => {
     const daysWeatherObj = await getDaysWeather(let, lon);
     const backButton = document.createElement('button');
+    const backButtonDiv = document.createElement('div');
+    const todayWeekCount = new Date().getDay();
+    const numToDay = {0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday'};
+    let dayCount = 0;
+
     resultSection.style.display = 'none';
     mainInner.style.display = 'none';
     aside.innerHTML = ``;
-    for (let i=0; i<Object.keys(daysWeatherObj).length-10; i++) {
-        const dayNum = Object.keys(daysWeatherObj)[i];
+    const dayCellsDiv = document.createElement('div');
+    dayCellsDiv.classList.add('day-cells-div');
+    
+    for (let i=0; i<Object.keys(daysWeatherObj).length; i++) {
+        let dateNum = (todayWeekCount + dayCount) % 7;
+        let currentNum = (todayWeekCount + Math.floor(i / 8)) % 7;
+        let currentDay = numToDay[currentNum];
+        let time = i*3;
+        while (time >= 24) {
+            time -= 24;
+        }
+        let hours = `${time<10 ? `0${time}` : time}`;
+
         const dayCell = document.createElement('div');
         const dayHeader = document.createElement('h5');
+        const dayTime = document.createElement('p');
         const dayTemp = document.createElement('p');
         const dayFeelsLike = document.createElement('p');
-        const dayMinTemp = document.createElement('p');
-        const dayMaxTemp = document.createElement('p');
 
-        dayHeader.textContent = `Day ${+dayNum+1}`;
-        dayTemp.textContent = `${daysWeatherObj[Object.keys(daysWeatherObj)[i]].main.temp}°C`;
-        dayFeelsLike.textContent = `Temp: ${daysWeatherObj[Object.keys(daysWeatherObj)[i]].main['feels_like']}°C`;
-        dayMinTemp.textContent = `Min temp: ${daysWeatherObj[Object.keys(daysWeatherObj)[i]].main['temp_min']}°C`;
-        dayMaxTemp.textContent = `Max temp: ${daysWeatherObj[Object.keys(daysWeatherObj)[i]].main['temp_max']}°C`;
+        dayHeader.textContent = `${currentDay}, ${dateNum}`;
+        dayTime.textContent = `${hours}:00`;
+        dayTemp.textContent = `Temp: ${daysWeatherObj[Object.keys(daysWeatherObj)[i]].main.temp}°C`;
+        dayFeelsLike.textContent = `Feels like: ${daysWeatherObj[Object.keys(daysWeatherObj)[i]].main['feels_like']}°C`;
+        dayCell.classList.add('day-cell');
         dayCell.style.border = '1px solid #000';
         dayCell.style.display = 'flex';
         dayCell.style.justifyContent = 'center';
         dayCell.style.flexDirection = 'column';
+
         dayCell.appendChild(dayHeader);
+        dayCell.appendChild(dayTime);
         dayCell.appendChild(dayTemp);
         dayCell.appendChild(dayFeelsLike);
-        dayCell.appendChild(dayMinTemp);
-        dayCell.appendChild(dayMaxTemp);
-        aside.appendChild(dayCell);
+        dayCellsDiv.appendChild(dayCell);
+        if (time >= 24) dayCount++;
     }
     backButton.textContent = 'Back';
     backButton.addEventListener('click', ()=>{
@@ -164,7 +199,17 @@ const display40DaysWeather = async (let, lon) => {
         aside.innerHTML = ``;
         resultStates.length = 0;
     });
-    aside.appendChild(backButton);
+    backButton.style.width = '75%';
+    backButton.style.height = '125%';
+    dayCellsDiv.style.display = 'grid';
+    dayCellsDiv.style.gridTemplateRows = 'repeat(5, 1fr)';
+    dayCellsDiv.style.gridTemplateColumns = 'repeat(8, 1fr)';
+    dayCellsDiv.style.gap = '5px';
+    backButtonDiv.style.display = 'flex';
+    backButtonDiv.style.justifyContent = 'center';
+    aside.appendChild(dayCellsDiv);
+    aside.appendChild(backButtonDiv);
+    backButtonDiv.appendChild(backButton);
 };
 
 const getCurrWeather = async (lat, lon) => {

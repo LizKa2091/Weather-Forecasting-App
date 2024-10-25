@@ -7,7 +7,7 @@
     width: clamp(250px, 1024px, 80vw);
     margin: 0 auto;
 }
-.main__section-user {
+.main__section-user, .main__section-result {
     width: clamp(200px, 920px, 75vw);
     margin: 0 auto;
 }
@@ -26,6 +26,7 @@ main {
     display: flex;
     justify-content: center;
     flex-direction: column;
+    margin-top: 10px;
 }
 fieldset {
     display: flex;
@@ -40,10 +41,56 @@ aside {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
+}
+.submit-button {
+    margin-top: 5px;
+}
+label {
+    margin: 5px 0;
 }
 @media (max-width: 982px) {
     main {
         height: 100%;
+    }
+    aside {
+        height: 100vw;
+    }
+}
+@media (max-width: 740px) {
+    .day-cell {
+        font-size: 12px;
+    }
+    .day-cells-div {
+        gap: 2.5px;
+    }
+}
+@media (max-width: 570px) {
+    main {
+        width: 90vw;
+    }
+    .day-cell p:nth-of-type(3){
+        display: none;
+    }
+    .day-cell {
+        font-size: 11px;
+    }
+    .main-wrapper {
+        width: 100%;
+    }
+    label {
+        font-size: 14px;
+    }
+}
+@media (max-width: 500px) {
+    .day-cell {
+        font-size: 9px;
+    }
+    aside {
+        margin: 0;
+    }
+    .day-cells-div {
+        grid-template-columns: repeat(5, 1fr) !important;
     }
 }
